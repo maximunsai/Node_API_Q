@@ -33,8 +33,8 @@ app.get('/nameUni', (req, res) => {
         full join employeeUni E2
         on E.id=E2.id )
         select * into insert_table from abc_cte`)
-        .then((data) => {
-            res.send(data);
+        .then(() => {
+            res.send('Inserted Successfully..!');
         })
         .catch((err) => {
             console.error('Error:', err);
@@ -43,6 +43,34 @@ app.get('/nameUni', (req, res) => {
 });
 
 
+app.get('/insertIntoNewTable', (req, res)=>{
+    db.query(`WITH abc_cte AS (
+        SELECT E.id, name, degree, university 
+        FROM employee E
+        FULL JOIN employeeUni E2 ON E.id = E2.id
+    )
+    INSERT INTO new_table (id, name, degree, university)
+    SELECT id, name, degree, university
+    FROM abc_cte
+    ON CONFLICT (id) DO UPDATE
+    SET name = EXCLUDED.name,
+        degree = EXCLUDED.degree,
+        university = EXCLUDED.university;`).then(()=>{
+            res.send('Inserted Successfully..!');
+        }).catch((err)=>{
+            console.log(err);
+            res.status(500).send('Internal Server Error');
+        })
+})
+
+app.get('/updatedTable', (req, res)=>{
+    db.query(`select * from new_table order by id`).then((data)=>{
+        res.send(data);
+    }).catch((err)=>{
+        console.log(err);
+        res.status(500).send('Internal Server Error');
+    })
+})
 app.listen(port, () => {
     console.log(`Listening to the port ${port}`)
 });
